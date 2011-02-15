@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties includeAllClasses="false" useMultiPlatformConfig="false" version="1">
+  <includeClasses>
+    <classEntry path="org.floxy.GUID"/>
+    <classEntry path="org.floxy.IInterceptor"/>
+    <classEntry path="org.floxy.IInvocation"/>
+    <classEntry path="org.floxy.IProxyListener"/>
+    <classEntry path="org.floxy.IProxyRepository"/>
+    <classEntry path="org.floxy.InterceptorProxyListener"/>
+    <classEntry path="org.floxy.MethodType"/>
+    <classEntry path="org.floxy.ProxyGenerator"/>
+    <classEntry path="org.floxy.ProxyRepository"/>
+    <classEntry path="org.floxy.SimpleInvocation"/>
+    <classEntry path="org.floxy.floxy_internal"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>
