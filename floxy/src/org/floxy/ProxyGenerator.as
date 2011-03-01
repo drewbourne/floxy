@@ -168,26 +168,20 @@ package org.floxy
 			{
 				for each(var method : MethodInfo in superClass.getMethods(false, true))
 				{
-//					if (method.qname.ns.name == "")
-//					{					
-						if (dynamicClass.getMethod(method.name,null,false) == null)
-						{
-							// TODO: IsFinal?
-							dynamicClass.addMethod(new MethodInfo(dynamicClass, method.name, null, method.visibility, method.isStatic, true, method.returnType, method.parameters, method.ns));
-						}
-//					}
+					if (dynamicClass.getMethod(method.name, method.ns, false) == null)
+					{
+						// TODO: IsFinal?
+						dynamicClass.addMethod(new MethodInfo(dynamicClass, method.name, null, method.visibility, method.isStatic, true, method.returnType, method.parameters, method.ns));
+					}
 				}
 				
 				for each(var property : PropertyInfo in superClass.getProperties(false, true))
 				{
-//					if (property.qname.ns.name == "")
-//					{
-						if (dynamicClass.getProperty(property.name,null,false) == null)
-						{
-							// TODO: IsFinal?
-							dynamicClass.addProperty(new PropertyInfo(dynamicClass, property.name, null, property.visibility, property.isStatic, true, property.type, property.canRead, property.canWrite, property.ns));
-						}
-//					}
+					if (dynamicClass.getProperty(property.name, property.ns, false) == null)
+					{
+						// TODO: IsFinal?
+						dynamicClass.addProperty(new PropertyInfo(dynamicClass, property.name, null, property.visibility, property.isStatic, true, property.type, property.canRead, property.canWrite, property.ns));
+					}
 				}
 				
 				superClass = superClass.baseType;
