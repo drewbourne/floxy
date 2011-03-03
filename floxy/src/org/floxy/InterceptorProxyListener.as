@@ -30,7 +30,7 @@ package org.floxy
 			{
 				if (baseMethod != null)
 				{
-					baseMethod.apply(null, arguments);
+					return baseMethod.apply(null, arguments);
 				}
 				
 				return;
