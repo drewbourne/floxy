@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<actionScriptProperties analytics="false" mainApplicationPath="FLoxy.as" projectUUID="2ff62422-2d66-4752-8a96-c0d2dd9ce743" version="7">
-  <compiler additionalCompilerArguments="" autoRSLOrdering="true" copyDependentFiles="false" fteInMXComponents="false" generateAccessible="false" htmlExpressInstall="true" htmlGenerate="false" htmlHistoryManagement="false" htmlPlayerVersionCheck="true" includeNetmonSwc="false" outputFolderPath="bin" sourceFolderPath="src" strict="true" targetPlayerVersion="0.0.0" useApolloConfig="false" useDebugRSLSwfs="true" verifyDigests="true" warn="true">
-    <compilerSourcePath/>
+<actionScriptProperties analytics="false" mainApplicationPath="FLoxy.as" projectUUID="2ff62422-2d66-4752-8a96-c0d2dd9ce743" version="10">
+  <compiler additionalCompilerArguments="-locale" autoRSLOrdering="true" copyDependentFiles="false" flexSDK="Flex 3.6" fteInMXComponents="false" generateAccessible="false" htmlExpressInstall="true" htmlGenerate="false" htmlHistoryManagement="false" htmlPlayerVersionCheck="true" includeNetmonSwc="false" outputFolderPath="bin" removeUnusedRSL="true" sourceFolderPath="src" strict="true" targetPlayerVersion="0.0.0" useApolloConfig="false" useDebugRSLSwfs="true" verifyDigests="true" warn="true">
+    <compilerSourcePath>
+      <compilerSourcePathEntry kind="1" linkType="1" path="test"/>
+    </compilerSourcePath>
     <libraryPath defaultLinkType="1">
       <libraryPathEntry kind="4" path=""/>
       <libraryPathEntry kind="3" linkType="1" path="/FLemit/bin/FLemit.swc" useDefaultLinkType="false"/>
       <libraryPathEntry kind="1" linkType="1" path="lib"/>
+      <libraryPathEntry kind="1" linkType="1" path="${FLEXUNIT_LIB_LOCATION}/version4libs/Common"/>
+      <libraryPathEntry kind="1" linkType="1" path="${FLEXUNIT_LIB_LOCATION}/version4libs/FlexProject"/>
+      <libraryPathEntry kind="1" linkType="1" path="${FLEXUNIT_LIB_LOCATION}/version4libs/FlexProject_Extended"/>
+      <libraryPathEntry kind="1" linkType="1" path="${FLEXUNIT_LOCALE_LOCATION}/version4locale/"/>
     </libraryPath>
     <sourceAttachmentPath/>
   </compiler>

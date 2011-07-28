@@ -15,6 +15,8 @@ package org.floxy
 		
 		public function createProxyFromInterface(qname : QualifiedName, interfaces : Array) : DynamicClass
 		{
+//			trace("ProxyRepository.createProxyFromInterface", qname, interfaces);
+			
 			var superClass : Type = Type.getType(Object);
 			
 			var dynamicClass : DynamicClass = new DynamicClass(qname, superClass, interfaces);
@@ -28,7 +30,7 @@ package org.floxy
 			
 			dynamicClass.addSlot(new FieldInfo(dynamicClass, PROXY_FIELD_NAME, qname.toString() + "/" + PROXY_FIELD_NAME, MemberVisibility.PUBLIC, false, Type.getType(IProxyListener)));
 			
-			dynamicClass.addMethodBody(dynamicClass.scriptInitialiser, generateScriptInitialier(dynamicClass));
+			dynamicClass.addMethodBody(dynamicClass.scriptInitialiser, generateScriptInitialiser(dynamicClass));
 			dynamicClass.addMethodBody(dynamicClass.staticInitialiser, generateStaticInitialiser(dynamicClass));
 			dynamicClass.addMethodBody(dynamicClass.constructor, generateInitialiser(dynamicClass));
 			
@@ -50,28 +52,28 @@ package org.floxy
 			return dynamicClass;
 		}
 		
-		public function createProxyFromClass(qname : QualifiedName, superClass : Type, interfaces : Array) : DynamicClass
+		public function createProxyFromClass(qname : QualifiedName, superClass : Type, interfaces : Array, namespacesToProxy:Array) : DynamicClass
 		{
-			trace('ProxyGenerator.createProxyFromClass class', qname);
+//			trace('ProxyGenerator.createProxyFromClass class', qname, interfaces, namespacesToProxy);
 			
 			var dynamicClass : DynamicClass = new DynamicClass(qname, superClass, interfaces);
 			
 			var method : MethodInfo;
 			var property : PropertyInfo;
 			
-			addSuperClassMembers(dynamicClass);
+			addSuperClassMembers(dynamicClass, namespacesToProxy);
 			
 			dynamicClass.constructor = createConstructor(dynamicClass);
 			
 			dynamicClass.addSlot(new FieldInfo(dynamicClass, PROXY_FIELD_NAME, qname.toString() + "/" + PROXY_FIELD_NAME, MemberVisibility.PUBLIC, false, Type.getType(IProxyListener)));
 			
-			dynamicClass.addMethodBody(dynamicClass.scriptInitialiser, generateScriptInitialier(dynamicClass));
+			dynamicClass.addMethodBody(dynamicClass.scriptInitialiser, generateScriptInitialiser(dynamicClass));
 			dynamicClass.addMethodBody(dynamicClass.staticInitialiser, generateStaticInitialiser(dynamicClass));
 			dynamicClass.addMethodBody(dynamicClass.constructor, generateInitialiser(dynamicClass));
 			
 			for each (method in dynamicClass.getMethods())
 			{
-				trace('ProxyGenerator.createProxyFromClass method', method.qname);
+//				trace('ProxyGenerator.createProxyFromClass method', method.qname);
 				
 				var baseMethod : MethodInfo = (method.isStatic)
 					? null 
@@ -82,7 +84,7 @@ package org.floxy
 			
 			for each (property in dynamicClass.getProperties())
 			{
-				trace('ProxyGenerator.createProxyFromClass property', property.qname);
+//				trace('ProxyGenerator.createProxyFromClass property', property.qname);
 				
 				var baseProperty : PropertyInfo = (property.isStatic)
 					? null
@@ -159,16 +161,25 @@ package org.floxy
 			}
 		}
 		
-		private function addSuperClassMembers(dynamicClass : DynamicClass) : void
+		private function addSuperClassMembers(dynamicClass : DynamicClass, namespacesToProxy:Array) : void
 		{
 			var superClass : Type = dynamicClass.baseType;
 			var objectType : Type = Type.getType(Object);
 			
-			while(superClass != objectType)
+//			trace("ProxyGenerator.addSuperClassMembers dynamicClass addSuper", dynamicClass.name, namespacesToProxy);
+			
+			while (superClass != objectType)
 			{
-				for each(var method : MethodInfo in superClass.getMethods(false, true))
+//				trace("ProxyGenerator.addSuperClassMembers superClass", superClass.name);
+				
+				for each (var method : MethodInfo in superClass.getMethods(false, true))
 				{
-					if (dynamicClass.getMethod(method.name, method.ns, false) == null)
+//					trace("ProxyGenerator.addSuperClassMembers method", method.ns, method.name, 
+//						dynamicClass.getMethod(method.name, method.ns, false) == null
+//						&& (!method.ns || namespacesToProxy.indexOf(method.ns) != -1));
+					
+					if (dynamicClass.getMethod(method.name, method.ns, false) == null
+						&& (!method.ns || namespacesToProxy.indexOf(method.ns) != -1))
 					{
 						// TODO: IsFinal?
 						dynamicClass.addMethod(new MethodInfo(dynamicClass, method.name, null, method.visibility, method.isStatic, true, method.returnType, method.parameters, method.ns));
@@ -177,7 +188,10 @@ package org.floxy
 				
 				for each(var property : PropertyInfo in superClass.getProperties(false, true))
 				{
-					if (dynamicClass.getProperty(property.name, property.ns, false) == null)
+//					trace("ProxyGenerator.addSuperClassMembers property", property.ns, property.name, !property.ns, namespacesToProxy.indexOf(property.ns));
+					
+					if (dynamicClass.getProperty(property.name, property.ns, false) == null
+						&& (!property.ns || namespacesToProxy.indexOf(property.ns) != -1))
 					{
 						// TODO: IsFinal?
 						dynamicClass.addProperty(new PropertyInfo(dynamicClass, property.name, null, property.visibility, property.isStatic, true, property.type, property.canRead, property.canWrite, property.ns));
@@ -200,117 +214,101 @@ package org.floxy
 				Type.star, params);
 		}
 		
-		private function generateScriptInitialier(dynamicClass : DynamicClass) : DynamicMethod
+		private function generateScriptInitialiser(dynamicClass : DynamicClass) : DynamicMethod
 		{
 			var clsNamespaceSet : NamespaceSet = new NamespaceSet(
 				[new BCNamespace(dynamicClass.packageName, NamespaceKind.PACKAGE_NAMESPACE)]);
 			
-			with (Instructions)
+//			trace("ProxyGenerator.generateScriptInitialiser dynamicClass ", dynamicClass.qname, dynamicClass.isInterface);
+//			trace("ProxyGenerator.generateScriptInitialiser clsNamespaceSet", clsNamespaceSet);
+//			trace("ProxyGenerator.generateScriptInitialiser multiNamespaceName", dynamicClass.multiNamespaceName);
+			
+			var op:Instructions = Instructions.instance;
+			
+			if (dynamicClass.isInterface)
 			{
-				if (dynamicClass.isInterface)
-				{
-					return new DynamicMethod(dynamicClass.scriptInitialiser, 3, 2, 1, 3, [
-						[GetLocal_0],
-						[PushScope],
-						[FindPropertyStrict, new MultipleNamespaceName(dynamicClass.name, clsNamespaceSet)], 
-						[PushNull],
-						[NewClass, dynamicClass],
-						[InitProperty, dynamicClass.qname],
-						[ReturnVoid]
-					]); 
-				}
-				else
-				{
-					// TODO: Support where base class is not Object
-					return new DynamicMethod(dynamicClass.scriptInitialiser, 3, 2, 1, 3, [
-						[GetLocal_0],
-						[PushScope],
-						//[GetScopeObject, 0],
-						[FindPropertyStrict, dynamicClass.multiNamespaceName], 
-						[GetLex, dynamicClass.baseType.qname],
-						[PushScope],
-						[GetLex, dynamicClass.baseType.qname],
-						[NewClass, dynamicClass],
-						[PopScope],
-						[InitProperty, dynamicClass.qname],
-						[ReturnVoid]
-					]);
-				}
+				return new DynamicMethod(dynamicClass.scriptInitialiser, 3, 2, 1, 3, [
+					[ op.GetLocal_0 ],
+					[ op.PushScope ],
+					[ op.FindPropertyStrict, new MultipleNamespaceName(dynamicClass.name, clsNamespaceSet) ], 
+					[ op.PushNull ],
+					[ op.NewClass, dynamicClass ],
+					[ op.InitProperty, dynamicClass.qname ],
+					[ op.ReturnVoid ]
+				]); 
+			}
+			else
+			{
+				// TODO: Support where base class is not Object
+				return new DynamicMethod(dynamicClass.scriptInitialiser, 3, 2, 1, 3, [
+					[ op.GetLocal_0 ],
+					[ op.PushScope ],
+					//[GetScopeObject, 0],
+					[ op.FindPropertyStrict, dynamicClass.multiNamespaceName ], 
+					[ op.GetLex, dynamicClass.baseType.qname ],
+					[ op.PushScope ],
+					[ op.GetLex, dynamicClass.baseType.qname ],
+					[ op.NewClass, dynamicClass ],
+					[ op.PopScope ],
+					[ op.InitProperty, dynamicClass.qname ],
+					[ op.ReturnVoid ]
+				]);
 			}
 		}
 		
 		private function generateStaticInitialiser(dynamicClass : DynamicClass) : DynamicMethod
 		{
-			with (Instructions)
-			{
-				return new DynamicMethod(dynamicClass.staticInitialiser, 2, 2, 3, 4, [
-					[GetLocal_0],
-					[PushScope],
-					[ReturnVoid]
-				]);
-			}
+			var op:Instructions = Instructions.instance;
+			
+			return new DynamicMethod(dynamicClass.staticInitialiser, 2, 2, 3, 4, [
+				[ op.GetLocal_0 ],
+				[ op.PushScope ],
+				[ op.ReturnVoid ]
+			]);
 		}
 		
 		private function generateInitialiser(dynamicClass : DynamicClass) : DynamicMethod
 		{
 			var baseCtor : MethodInfo = dynamicClass.baseType.constructor;
-				
 			var argCount : uint = baseCtor.parameters.length;
-			
 			var proxyField : FieldInfo = dynamicClass.getField(PROXY_FIELD_NAME,null);
+			var op:Instructions = Instructions.instance;
 			
-			with (Instructions)
+			var instructions : Array = [
+				[ op.GetLocal_0 ],
+				[ op.PushScope ],
+				
+				[ op.FindProperty, proxyField.qname ],
+				[ op.GetLocal_1 ], // proxy argument (always first arg)
+				[ op.InitProperty, proxyField.qname ],
+				
+				// begin construct super
+				[ op.GetLocal_0 ] // 'this'
+			];
+			
+			for (var i:uint=0; i<argCount; i++) 
 			{
-				var instructions : Array = [
-					[GetLocal_0],
-					[PushScope],
-					
-					
-					/* [ReturnVoid]]; */
-					
-					[FindProperty, proxyField.qname],
-					[GetLocal_1], // proxy argument (always first arg)
-					[InitProperty, proxyField.qname],
-					
-					// begin construct super
-					[GetLocal_0] // 'this'
-				];
-				
-				for (var i:uint=0; i<argCount; i++) 
-				{
-					instructions.push([GetLocal, i+2]);
-					
-					/* if (ParameterInfo(baseCtor.parameters[i]).optional)
-					{
-						instructions.push([PushUndefined]);
-						instructions.push([IfNotEquals, 2]);
-						instructions.push([ConstructSuper, argCount]);
-					} */
-				}
-				
-				instructions.push(
-					// Optionals?
-					//[PushUndefined]
-				
-					[ConstructSuper, argCount],
-					// end construct super
-				
-					// call __proxy__.methodExecuted(this, CONSTRUCTOR, className, ns, {arguments})
-					[GetLocal_1],
-					[GetLocal_0],
-					[PushByte, MethodType.CONSTRUCTOR],
-					[PushString, dynamicClass.name],
-					[PushNull],
-					[GetLocal, argCount + 2], // 'arguments'
-					[PushNull],
-					[CallPropVoid, proxyListenerType.getMethod("methodExecuted").qname, 6],
-					
-					
-					[ReturnVoid]
-				);
-				
-				return new DynamicMethod(dynamicClass.constructor, 7 + argCount, 3 + argCount, 4, 5, instructions);
+				instructions.push([ op.GetLocal, i + 2 ]);
 			}
+			
+			instructions.push(
+				[ op.ConstructSuper, argCount ],
+				// end construct super
+			
+				// call __proxy__.methodExecuted(this, CONSTRUCTOR, className, ns, {arguments})
+				[ op.GetLocal_1 ],
+				[ op.GetLocal_0 ],
+				[ op.PushByte, MethodType.CONSTRUCTOR ],
+				[ op.PushString, dynamicClass.name ],
+				[ op.PushNull ],
+				[ op.GetLocal, argCount + 2 ], // 'arguments'
+				[ op.PushNull ],
+				[ op.CallPropVoid, proxyListenerType.getMethod("methodExecuted").qname, 6 ],
+				
+				[ op.ReturnVoid ]
+			);
+				
+			return new DynamicMethod(dynamicClass.constructor, 7 + argCount, 3 + argCount, 4, 5, instructions);
 		}
 		
 		private function generateMethod(dynamicClass : DynamicClass, method : MethodInfo, baseMethod : MethodInfo, baseIsDelegate : Boolean, name : String, methodType : uint) : DynamicMethod
@@ -318,145 +316,131 @@ package org.floxy
 			var argCount : uint = method.parameters.length;
 			var proxyField : FieldInfo = dynamicClass.getField(PROXY_FIELD_NAME,null);
 			var ns:String = method.ns;
+			var op:Instructions = Instructions.instance;
 			
-			with (Instructions)
+			var instructions : Array = [
+				[op.GetLocal_0],
+				[op.PushScope],
+				
+				[op.GetLex, proxyField.qname],
+				[op.GetLocal_0],
+				[op.PushByte, methodType],
+				[op.PushString, name],
+				[op.PushString, ns],
+				[op.GetLocal, argCount + 1], // 'arguments'					
+			];
+			
+			// TODO: IsFinal?
+			if (baseMethod != null)
 			{
-				var instructions : Array = [
-					[GetLocal_0],
-					[PushScope],
-					
-					[GetLex, proxyField.qname],
-					[GetLocal_0],
-					[PushByte, methodType],
-					[PushString, name],
-					[PushString, ns],
-					[GetLocal, argCount + 1], // 'arguments'					
-				];
-				
-				// TODO: IsFinal?
-				if (baseMethod != null)
+				if (baseIsDelegate)
 				{
-					if (baseIsDelegate)
-					{
-						instructions.push(
-							[GetLex, baseMethod.qname]
-						);
-					}
-					else
-					{
-						instructions.push(
-							[GetLocal_0],
-							[GetSuper, baseMethod.qname]
-						);
-					}
+					instructions.push(
+						[op.GetLex, baseMethod.qname]
+					);
 				}
 				else
 				{
 					instructions.push(
-						[PushNull]
+						[op.GetLocal_0],
+						[op.GetSuper, baseMethod.qname]
 					);
 				}
-				
-				instructions.push(
-					[CallProperty, proxyListenerType.getMethod("methodExecuted").qname, 6]
-				);
-				
-				if (method.returnType == Type.voidType) // void
-				{
-					instructions.push([ReturnVoid]);
-				}
-				else
-				{
-					instructions.push(
-						//[GetLex, method.returnType.qname],
-						//[AsTypeLate],
-						[ReturnValue]
-					);
-				}
-				
-				return new DynamicMethod(method, 8 + argCount, argCount + 2, 4, 5, instructions);
 			}
+			else
+			{
+				instructions.push(
+					[op.PushNull]
+				);
+			}
+			
+			instructions.push(
+				[op.CallProperty, proxyListenerType.getMethod("methodExecuted").qname, 6]
+			);
+			
+			if (method.returnType == Type.voidType) // void
+			{
+				instructions.push(
+					[op.ReturnVoid]
+				);
+			}
+			else
+			{
+				instructions.push(
+					[op.ReturnValue]
+				);
+			}
+			
+			return new DynamicMethod(method, 8 + argCount, argCount + 2, 4, 5, instructions);
 		}
 		
 		private function generateSuperPropertyGetterMethod(property : PropertyInfo) : DynamicMethod
 		{
-			var method : MethodInfo = new MethodInfo(property.owner, "get_" + property.name + "_internal", null, MemberVisibility.PRIVATE, false, false, Type.getType(Object), []); 
+			var method : MethodInfo = new MethodInfo(property.owner, "get_" + property.name + "_internal", null, MemberVisibility.PRIVATE, false, false, Type.getType(Object), []);
+			var op:Instructions = Instructions.instance;
 			
-			with(Instructions)
-			{
-				var instructions : Array = [
-					[GetLocal_0],
-					[PushScope],
-					
-					[GetLocal_0],
-					[GetSuper, property.qname],
-					
-					[GetLex, property.type.qname],
-					[AsTypeLate],
-					
-					[ReturnValue]
-				];
+			var instructions : Array = [
+				[op.GetLocal_0],
+				[op.PushScope],
 				
-				return new DynamicMethod(method, 3, 2, 4, 5, instructions);
-			}
+				[op.GetLocal_0],
+				[op.GetSuper, property.qname],
+				
+				[op.GetLex, property.type.qname],
+				[op.AsTypeLate],
+				
+				[op.ReturnValue]
+			];
+			
+			return new DynamicMethod(method, 3, 2, 4, 5, instructions);
 		}
 		
 		private function generateSuperPropertySetterMethod(property : PropertyInfo) : DynamicMethod
 		{
 			var valueParam : ParameterInfo = new ParameterInfo("value", property.type, false);
-			
 			var method : MethodInfo = new MethodInfo(property.owner, "set_" + property.name + "_internal", null, MemberVisibility.PRIVATE, false, false, Type.getType(Object), [valueParam]); 
+			var op:Instructions = Instructions.instance;
 			
-			with(Instructions)
-			{
-				var instructions : Array = [
-					[GetLocal_0],
-					[PushScope],
-					
-					[GetLocal_0],
-					[GetLocal_1],
-					[SetSuper, property.qname],
-					
-					[ReturnVoid]
-				];
+			var instructions : Array = [
+				[op.GetLocal_0],
+				[op.PushScope],
 				
-				return new DynamicMethod(method, 4, 3, 4, 5, instructions);
-			}
+				[op.GetLocal_0],
+				[op.GetLocal_1],
+				[op.SetSuper, property.qname],
+				
+				[op.ReturnVoid]
+			];
+			
+			return new DynamicMethod(method, 4, 3, 4, 5, instructions);
 		}
 		
 		private function generateCreateInstanceMethod(dynamicClass : DynamicClass) : DynamicMethod
 		{
 			var argCount : int = dynamicClass.constructor.parameters.length;
-			
 			var method : MethodInfo = new MethodInfo(dynamicClass, CREATE_METHOD, null, MemberVisibility.PUBLIC, true, false, dynamicClass, dynamicClass.constructor.parameters); 
+			var op:Instructions = Instructions.instance;
 			
-			with(Instructions)
+			var instructions : Array = [
+				[ op.GetLocal_0 ],
+				[ op.PushScope ],
+				
+				[ op.GetLex, dynamicClass.qname ]
+			];
+				
+			for (var i : int = 0; i<argCount; i++)
 			{
-				var instructions : Array = [
-					[GetLocal_0],
-					[PushScope],
-					
-					[GetLex, dynamicClass.qname]
-				];
-					
-				for (var i : int = 0; i<argCount; i++)
-				{
-					instructions.push(
-						[GetLocal, i+1]
-					);
-				}
-				
 				instructions.push(
-					[Construct, dynamicClass.constructor.parameters.length],
-					
-					/* [GetLex, dynamicClass.qname],
-					[AsTypeLate], */
-					
-					[ReturnValue]
+					[ op.GetLocal, i + 1 ]
 				);
-				
-				return new DynamicMethod(method, 2 + argCount, 2 + argCount, 3, 4, instructions);
 			}
+			
+			instructions.push(
+				[ op.Construct, dynamicClass.constructor.parameters.length ],
+				[ op.ReturnValue ]
+			);
+			
+			return new DynamicMethod(method, 2 + argCount, 2 + argCount, 3, 4, instructions);
 		}
 		
 		private static const PROXY_FIELD_NAME : String = "__proxy__";

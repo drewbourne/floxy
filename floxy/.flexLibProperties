@@ -11,7 +11,13 @@
     <classEntry path="org.floxy.ProxyGenerator"/>
     <classEntry path="org.floxy.ProxyRepository"/>
     <classEntry path="org.floxy.SimpleInvocation"/>
+    <classEntry path="org.floxy.event.ProxyClassEvent"/>
     <classEntry path="org.floxy.floxy_internal"/>
+    <classEntry path="org.floxy.event.ProxyClassEventTest"/>
+    <classEntry path="org.floxy.ProxyClassInfo"/>
+    <classEntry path="org.floxy.ProxyRepositoryTest"/>
+    <classEntry path="org.floxy.testSupport.test_support"/>
+    <classEntry path="org.floxy.testSupport.FloxyNamespaceSupport"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

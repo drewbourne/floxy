@@ -48,5 +48,10 @@ package org.floxy
 		 * or ErrorEvent.ERROR if there is an error during preparation
 		 */
 		function prepare(classes : Array, applicationDomain : ApplicationDomain = null) : IEventDispatcher;
+		
+		/**
+		 * @private
+		 */
+		function prepareClass(classReference:Class, namespacesToProxy:Array = null, applicationDomain:ApplicationDomain = null):IEventDispatcher
 	}
 }
