@@ -48,7 +48,7 @@ package org.floxy
 		 */
 		public function create(cls:Class, args:Array, interceptor:IInterceptor):Object
 		{
-			trace("ProxyRepository.create", cls, args);
+//			trace("ProxyRepository.create", cls, args);
 			
 			var proxyClass:Class = _proxies[cls];
 			if (proxyClass == null)
@@ -65,7 +65,7 @@ package org.floxy
 		 */
 		public function createWithProxyClass(proxyClass:Class, args:Array, interceptor:IInterceptor):Object 
 		{
-			trace("ProxyRepository.createWithProxyClass", proxyClass, args);
+//			trace("ProxyRepository.createWithProxyClass", proxyClass, args);
 			
 			var proxyListener:IProxyListener = new InterceptorProxyListener(interceptor, proxyClass);
 			var constructorArgCount:int = Type.getType(proxyClass).constructor.parameters.length;
@@ -126,13 +126,13 @@ package org.floxy
 		{
 			applicationDomain = applicationDomain || new ApplicationDomain(ApplicationDomain.currentDomain);
 			
-			trace("ProxyRepository.prepare", classes);
+//			trace("ProxyRepository.prepare", classes);
 			
 			var classesToPrepare:Array = filterAlreadyPreparedClasses(classes);
 			
 			if (classesToPrepare.length == 0)
 			{
-				trace("ProxyRepository.prepare already prepared", classes);
+//				trace("ProxyRepository.prepare already prepared", classes);
 				
 				return new CompletedEventDispatcher();
 			}
@@ -159,7 +159,7 @@ package org.floxy
 				
 				var qname:QualifiedName = generateQName(type);
 				
-				trace("ProxyRepository.prepare proxy", qname.toString());
+//				trace("ProxyRepository.prepare proxy", qname.toString());
 				
 				generatedNames[cls] = qname;
 				
@@ -187,7 +187,7 @@ package org.floxy
 			
 			function swfErrorHandler(error:ErrorEvent):void
 			{
-				trace("ProxyRepository.prepare error generating swf: " + error.text);
+//				trace("ProxyRepository.prepare error generating swf: " + error.text);
 				
 				_loaders.splice(_loaders.indexOf(error.target), 1);
 				_preparers.splice(_preparers.indexOf(eventDispatcher), 1);
@@ -209,7 +209,7 @@ package org.floxy
 					
 					_proxies[cls] = generatedClass;
 					
-					trace("ProxyRepository prepare loaded", cls, generatedClass);
+//					trace("ProxyRepository prepare loaded", cls, generatedClass);
 					var proxyClassInfo:ProxyClassInfo = new ProxyClassInfo(cls, null, generatedClass);
 					
 					eventDispatcher.dispatchEvent(new ProxyClassEvent(proxyClassInfo));
@@ -229,12 +229,12 @@ package org.floxy
 		{
 			applicationDomain = applicationDomain || new ApplicationDomain(ApplicationDomain.currentDomain);
 			
-			trace("ProxyRepository.prepareClasses", classes.length, classes);
+//			trace("ProxyRepository.prepareClasses", classes.length, classes);
 			
 			var classesToPrepare:Array = classes;
 			if (classesToPrepare.length == 0)
 			{
-				trace("ProxyRepository.prepareClasses no classes to prepare", classes);
+//				trace("ProxyRepository.prepareClasses no classes to prepare", classes);
 				return new CompletedEventDispatcher();
 			}
 			
@@ -246,8 +246,8 @@ package org.floxy
 				var classToPrepare:Class = item[0];
 				var namespacesToProxy:Array = prepareNamespacesToProxy(item[1] || []);
 				
-				trace("ProxyRepository.prepareClasses classToPrepare", classToPrepare);
-				trace("ProxyRepository.prepareClasses namespacesToProxy", namespacesToProxy);
+//				trace("ProxyRepository.prepareClasses classToPrepare", classToPrepare);
+//				trace("ProxyRepository.prepareClasses namespacesToProxy", namespacesToProxy);
 				
 				var type:Type = Type.getType(classToPrepare);
 				if (type.isGeneric || type.isGenericTypeDefinition)
@@ -262,7 +262,7 @@ package org.floxy
 				
 				var qname:QualifiedName = generateQName(type);
 				
-				trace("ProxyRepository.prepareClasses proxy", qname.toString());
+//				trace("ProxyRepository.prepareClasses proxy", qname.toString());
 				
 				item[2] = qname;
 				
@@ -290,7 +290,7 @@ package org.floxy
 			
 			function swfErrorHandler(error:ErrorEvent):void
 			{
-				trace("ProxyRepository.prepareClasses error generating swf: " + error.text);
+//				trace("ProxyRepository.prepareClasses error generating swf: " + error.text);
 				
 				_loaders.splice(_loaders.indexOf(error.target), 1);
 				_preparers.splice(_preparers.indexOf(eventDispatcher), 1);
@@ -302,21 +302,21 @@ package org.floxy
 			{
 				for each (var item:Array in classesToPrepare)
 				{
-					trace("ProxyRepository.prepareClasses loaded item", item);
+//					trace("ProxyRepository.prepareClasses loaded item", item);
 					
 					var classToPrepare:Class = item[0];
 					var namespacesToProxy:Array = item[1] || [];
 					var qname:QualifiedName = item[2];
 					var fullName:String = qname.ns.name.concat('::', qname.name);
 					
-					trace("ProxyRepository.prepareClasses loaded", fullName);
+//					trace("ProxyRepository.prepareClasses loaded", fullName);
 					var generatedClass:Class = loader.contentLoaderInfo.applicationDomain.getDefinition(fullName) as Class;
 					
 					Type.getType(generatedClass);
 					
 					_proxies[classToPrepare] = generatedClass;
 					
-					trace("ProxyRepository.prepareClasses loaded", classToPrepare, generatedClass);
+//					trace("ProxyRepository.prepareClasses loaded", classToPrepare, generatedClass);
 					var proxyClassInfo:ProxyClassInfo = new ProxyClassInfo(classToPrepare, namespacesToProxy, generatedClass);
 					
 					eventDispatcher.dispatchEvent(new ProxyClassEvent(proxyClassInfo));
@@ -352,7 +352,7 @@ package org.floxy
 			
 			var qname:QualifiedName = generateQName(type);
 			
-			trace("ProxyRepository.prepareClass", qname.toString());
+//			trace("ProxyRepository.prepareClass", qname.toString());
 			
 			var dynamicClass:DynamicClass = (type.isInterface)
 				? _proxyGenerator.createProxyFromInterface(qname, [ type ])
@@ -378,7 +378,7 @@ package org.floxy
 			
 			function swfErrorHandler(error:ErrorEvent):void
 			{
-				trace("ProxyRepository.prepareClass error generating swf: " + error.text);
+//				trace("ProxyRepository.prepareClass error generating swf: " + error.text);
 				
 				eventDispatcher.dispatchEvent(error);
 				
@@ -397,7 +397,7 @@ package org.floxy
 				
 				var proxyClassInfo:ProxyClassInfo = new ProxyClassInfo(classReference, namespacesToProxy, generatedClass);
 				
-				trace("ProxyRepository.prepareClass", classReference, generatedClass);
+//				trace("ProxyRepository.prepareClass", classReference, generatedClass);
 				eventDispatcher.dispatchEvent(new ProxyClassEvent(proxyClassInfo));
 				
 				eventDispatcher.dispatchEvent(new Event(Event.COMPLETE));
